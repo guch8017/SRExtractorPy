@@ -124,6 +124,8 @@ class ClassLoader:
                     log.info(f'Skipping {item} due to blacklist')
                     continue
                 field = list(set(self._merge_derivation_class_list(item)) - set(BLACK_LIST.get(item, [])))
+                # FIXME: Try skip all obfuscated classes. At least it works for now
+                field = [x for x in field if re.fullmatch(r'[A-Z]{11,}', x) is None]
                 field.sort()
                 self._cls_index[item] = {str(idx + 1): it for idx, it in enumerate(field)}
                 self._cls_index[item]['0'] = item

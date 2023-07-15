@@ -188,10 +188,6 @@ class ConfigLoader:
                 if not cls_name:
                     raise ValueError(f'Unknown class index {cls_idx} for class {class_name}')
                 return self.load_class(reader, cls_name, False)
-        # if parse_derivation:
-        #     base_cls = self._class.get_base_class(class_name)
-        #     if base_cls is not None and base_cls != 'JsonConfig' and parse_derivation:  # Black magic :)
-        #         result.update(self.load_class(reader, base_cls))
         # TaskConfig use merge field instead of lookup base class.
         class_decl = self._class.get_class(class_name, True)
         if class_decl is None:
