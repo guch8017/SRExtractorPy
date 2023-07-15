@@ -27,6 +27,7 @@ class TextmapLoader:
         self._textmap = {}
 
     def load_by_language(self, design: DesignIndexLoader, language: Language):
+        self._textmap.clear()
         reader = design.get_reader(name=f'BakedConfig/ExcelOutput/Textmap_{language.value}.bytes')
         if not reader:
             logger.warning(f'Textmap_{language.value}.bytes not found.')
