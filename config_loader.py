@@ -93,7 +93,7 @@ class ConfigLoader:
         for _ in range(arr_len):
             data = {index_field: _}
             data.update(self.load_class(reader, base_class + 'Row', False, False))
-            result[data[index_field]] = data
+            result[str(data[index_field])] = data
         return result
 
     def load_all_excels(self, output_dir: str, path_mapping: dict = None):
