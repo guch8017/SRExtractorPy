@@ -398,6 +398,8 @@ class ConfigLoader:
             return reader.read_float()
         elif field_type == 'double':
             return reader.read_double()
+        elif field_type == 'byte':
+            return reader.read_byte()
         elif field_type == 'DynamicFloat':
             return self.parse_dynamic_float(reader)
         elif field_type == 'DynamicValue':
