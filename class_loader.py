@@ -61,7 +61,7 @@ class EnumDecl:
 
 
 class ClassLoader:
-    def __init__(self, header_file: str, index_file: str):
+    def __init__(self, header_file: str, index_file: str = None):
         self._classes: Dict[str, List[FieldDecl]] = {}
         self._enums: Dict[str, EnumDecl] = {}
         self._base_classes: Dict[str, str] = {}
@@ -70,8 +70,11 @@ class ClassLoader:
         self._cur_namespace = ''
         with open(header_file, 'r', encoding='utf-8') as f:
             self.header_raw = f.readlines()
-        with open(index_file, 'r', encoding='utf-8') as f:
-            self._cls_index = json.load(f)
+        if index_file is not None:
+            with open(index_file, 'r', encoding='utf-8') as f:
+                self._cls_index = json.load(f)
+        else:
+            self._cls_index = {}
         self._idx = 0
         self._len = len(self.header_raw)
         self.parse()
