@@ -91,7 +91,8 @@ class ConfigLoader:
         index_field = self._class.get_class(base_class + 'Row')[0].name
         result = {}
         for _ in range(arr_len):
-            data = self.load_class(reader, base_class + 'Row', False, False)
+            data = {index_field: _}
+            data.update(self.load_class(reader, base_class + 'Row', False, False))
             result[data[index_field]] = data
         return result
 
@@ -102,7 +103,8 @@ class ConfigLoader:
             for class_name, s_path in path_mapping.items():
                 try:
                     data = self.load_binary_excel(class_name, s_path)
-                    with open(os.path.join(output_dir, os.path.basename(s_path)[:-6] + '.json'), 'w', encoding='utf-8') as f:
+                    with open(os.path.join(output_dir, os.path.basename(s_path)[:-6] + '.json'), 'w',
+                              encoding='utf-8') as f:
                         json.dump(data, f, indent=2, ensure_ascii=False)
                 except:
                     err_list.append(class_name)
