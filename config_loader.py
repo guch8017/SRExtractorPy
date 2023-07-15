@@ -121,6 +121,20 @@ class ConfigLoader:
                     err_list.append(excel_name)
         return err_list
 
+    def load_all_story(self, output_dir: str):
+        story_config = self.load_binary_excel('PerformanceC', 'BakedConfig/ExcelOutput/PerformanceC.bytes')
+        err = []
+        for config in story_config.values():
+            path = config['PerformancePath']
+            try:
+                data = self.load_binary_config(path[:-5] + '.bytes', 'LevelGraphConfig')
+                os.makedirs(os.path.join(output_dir, os.path.dirname(path)), exist_ok=True)
+                with open(os.path.join(output_dir, path), 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=2, ensure_ascii=False)
+            except:
+                err.append(path)
+        return err
+
     def load_all_configs(self, output_dir: str):
         err_list = {}
         for config_name in self._manifest.keys():
