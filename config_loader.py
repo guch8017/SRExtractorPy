@@ -264,7 +264,7 @@ class ConfigLoader:
             return {"IsDynamic": False, "FixedValue": {"Value": value}}
 
     @staticmethod
-    def parse_dynamic_value(reader: BinaryReader):
+    def parse_dynamic_value_read_type(reader: BinaryReader):
         # Aka. FJIPGPKEDBE___FromBinary
         dynamic_value_read_type = reader.read_byte()
         if dynamic_value_read_type != 0:
@@ -296,10 +296,51 @@ class ConfigLoader:
                 if has_append_hash:
                     reader.read_hash()
                     reader.read_hash()
-            dyn = ConfigLoader.parse_dynamic_value(reader)
+            dyn = ConfigLoader.parse_dynamic_value_read_type(reader)
             if dyn['DynamicValueReadType'] != 0:
                 sub_item['IMMOBDAEDCL'] = dyn
             ret[hash_] = sub_item
+        return ret
+
+    @staticmethod
+    def parse_dynamic_value(reader: BinaryReader):
+        ret = {}
+        _type = reader.read_sleb128()
+        if _type == 0:
+            ret['Type'] = 'INT'
+            ret['IntValue'] = reader.read_sleb128()
+        elif _type == 1:
+            ret['Type'] = 'FLOAT'
+            ret['FloatValue'] = reader.read_float()
+        elif _type == 2:
+            ret['Type'] = 'BOOL'
+            ret['BoolValue'] = reader.read_bool()
+        elif _type == 3:
+            ret['Type'] = 'ARRAY'
+            data = []
+            arr_len = reader.read_array_len()
+            for _ in range(arr_len):
+                data.append(ConfigLoader.parse_dynamic_value(reader))
+            ret['ArrayValue'] = data
+        elif _type == 4:
+            ret['Type'] = 'MAP'
+            data = []
+            arr_len = reader.read_array_len()
+            for _ in range(arr_len):
+                key = ConfigLoader.parse_dynamic_value(reader)
+                value = ConfigLoader.parse_dynamic_value(reader)
+                data.append({
+                    'Key': key,
+                    'Value': value
+                })
+            ret['MapValue'] = data
+        elif _type == 5:
+            ret['Type'] = 'STRING'
+            ret['StringValue'] = reader.read_string()
+        elif _type == 6:
+            ret['Type'] = 'NULL'
+        else:
+            raise ValueError(f'Unknown dynamic value type {_type}')
         return ret
 
     def parse_dictionary(self, reader: BinaryReader, key_type: str, value_type: str):
@@ -359,6 +400,8 @@ class ConfigLoader:
             return reader.read_double()
         elif field_type == 'DynamicFloat':
             return self.parse_dynamic_float(reader)
+        elif field_type == 'DynamicValue':
+            return self.parse_dynamic_value(reader)
         elif field_type == 'FMIOFJDICOO':  # TODO: DynamicValues in AbilityConfig
             return self.parse_dynamic_values(reader)
         elif field_type == 'TextID' or field_type == 'StringHash':
