@@ -15,10 +15,14 @@ class DesignConfigEntry:
         self.parent = parent
 
     @classmethod
-    def from_reader(cls, reader: BinaryReader, parent: "FileEntry") -> "DesignConfigEntry":
+    def from_reader(cls, reader: BinaryReader, parent: "FileEntry", version: str) -> "DesignConfigEntry":
         hash_ = reader.read_b_int()
-        size = reader.read_b_ulong()
-        offset = reader.read_b_ulong()
+        if version >= '1.2.53':
+            size = reader.read_b_uint()
+            offset = reader.read_b_uint()
+        else:
+            size = reader.read_b_ulong()
+            offset = reader.read_b_ulong()
         return cls(hash_, size, offset, parent)
 
     def __repr__(self):
@@ -34,24 +38,25 @@ class FileEntry:
         self.chunks: List[DesignConfigEntry] = []
 
     @classmethod
-    def from_reader(cls, reader: BinaryReader) -> "FileEntry":
+    def from_reader(cls, reader: BinaryReader, version: str) -> "FileEntry":
         hash_ = reader.read_b_int()
         name = bytes_to_hex_string(reader.read_bytes(16)) + '.bytes'
         size = reader.read_b_ulong()
         count = reader.read_b_uint()
         ret = cls(hash_, name, size, count)
         for _ in range(count):
-            ret.chunks.append(DesignConfigEntry.from_reader(reader, ret))
+            ret.chunks.append(DesignConfigEntry.from_reader(reader, ret, version))
         reader.skip(1)
         return ret
 
 
 class DesignIndexLoader:
-    def __init__(self, path: str):
+    def __init__(self, path: str, version: str = '1.0.0'):
         path = os.path.abspath(path)
         self.file_entries: List[FileEntry] = []
         self.hash_map = {}
         self.dir_path = None
+        self.version = version
         if os.path.isdir(path):
             self.dir_path = path
             for f in os.listdir(path):
@@ -75,9 +80,14 @@ class DesignIndexLoader:
     def _load(self, path: str):
         logger.info(f'Loading design index from {os.path.basename(path)}...')
         self._reader = BinaryReader(path=path)
+        # Fix for 1.2.53+
+        if self.version >= '1.2.53':
+            self._reader.skip(8)
         file_cnt = self._reader.read_b_uint()
+        if self.version >= '1.2.53':
+            self._reader.skip(4)
         for _ in range(file_cnt):
-            self.file_entries.append(FileEntry.from_reader(self._reader))
+            self.file_entries.append(FileEntry.from_reader(self._reader, self.version))
         for f in self.file_entries:
             for c in f.chunks:
                 self.hash_map[c.hash] = c
