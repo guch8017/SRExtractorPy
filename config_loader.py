@@ -211,6 +211,44 @@ class ConfigLoader:
         return result
 
     @staticmethod
+    def parse_dynamic_float_rel(reader: BinaryReader):
+        # REL version differ from BETA version
+        is_dynamic = reader.read_bool()
+        if is_dynamic:
+            num_ops = reader.read_byte()
+            expression = []
+            for _ in range(num_ops):
+                op_code = reader.read_byte()
+                if op_code == 0:
+                    expression.append({'Type': 'FixedNumber', 'FixedValue': {
+                                'Value': reader.read_sleb128() / 4294967296}})
+                elif op_code == 1:
+                    expression.append({'Type': 'DynamicNumber', 'DynamicHash': reader.read_hash()})
+                elif op_code == 2:
+                    expression.append({'Type': 'Add'})
+                elif op_code == 3:
+                    expression.append({'Type': 'Sub'})
+                elif op_code == 4:
+                    expression.append({'Type': 'Mul'})
+                elif op_code == 5:
+                    expression.append({'Type': 'Div'})
+                elif op_code == 6:
+                    expression.append({'Type': 'Neg'})
+                elif op_code == 7:
+                    expression.append({'Type': 'Floor'})
+                elif op_code == 8:
+                    expression.append({'Type': 'Round'})
+                elif op_code == 9:
+                    expression.append({'Type': 'Int'})
+                else:
+                    raise ValueError(f'Unknown opcode {op_code}')
+            return {"IsDynamic": True, "Expressions": expression}
+        else:
+            value = reader.read_sleb128() / 4294967296
+            return {"IsDynamic": False, "FixedValue": {"Value": value}}
+
+
+    @staticmethod
     def parse_dynamic_float(reader: BinaryReader, parse_expression=True) -> dict:
         # Dynamic float parser
         is_dynamic = reader.read_bool()
@@ -405,7 +443,7 @@ class ConfigLoader:
         elif field_type == 'uint':
             return reader.read_uleb128()
         elif field_type == 'FixPoint':
-            return reader.read_uleb128() / 4294967296
+            return reader.read_sleb128() / 4294967296
         elif field_type == 'int':
             return reader.read_sleb128()
         elif field_type == 'float':
