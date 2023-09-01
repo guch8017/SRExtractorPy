@@ -1,4 +1,5 @@
 import json
+import os
 from enum import Enum
 from design_index_loader import DesignIndexLoader
 from logger import get_logger
@@ -48,8 +49,9 @@ class TextmapLoader:
         return self._textmap[hash_][0]
 
     def dump(self, path: str):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         text_map = {}
         for k, v in self._textmap.items():
             text_map[k] = v[0]
         with open(path, 'w', encoding='utf-8') as f:
-            json.dump(text_map, f, ensure_ascii=False, indent=4)
+            json.dump(text_map, f, ensure_ascii=False, indent=2)
