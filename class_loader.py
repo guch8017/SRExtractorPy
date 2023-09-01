@@ -201,6 +201,10 @@ class ClassLoader:
                 self._rev_base_class[base_class] = [class_name]
         class_decl = []
         self._idx += 1
+        if self.header_raw[self._idx].startswith('{}'):
+            # Fix empty class decl
+            self._classes[class_name] = class_decl
+            return
         while not self.header_raw[self._idx].startswith('}'):
             pat = re.search(r'public ([a-zA-Z0-9_]+)(\[])? ([a-zA-Z0-9_]+);', self.header_raw[self._idx])
             if pat:
