@@ -34,13 +34,17 @@ ZIPPED_CLASS = {
 
 
 class ConfigLoader:
-    def __init__(self, design: DesignIndexLoader, cls: ClassLoader):
+    def __init__(self, design: DesignIndexLoader, cls: ClassLoader, is_beta: bool = True):
         self._design = design
         self._class = cls
-        with open(
-                os.path.join(design.dir_path, design.get_entry(name='BakedConfig/ConfigManifest.json').parent.filename),
-                'r', encoding='utf-8') as f:
-            self._manifest = json.load(f)
+        self._beta = is_beta
+        try:
+            with open(
+                    os.path.join(design.dir_path, design.get_entry(name='BakedConfig/ConfigManifest.json').parent.filename),
+                    'r', encoding='utf-8') as f:
+                self._manifest = json.load(f)
+        except:
+            self._manifest = {}
 
     def load_binary_config(self, s_config: str, base_class: str, dump: str = None):
         idx = s_config.rfind('.')
@@ -411,7 +415,10 @@ class ConfigLoader:
         elif field_type == 'byte':
             return reader.read_byte()
         elif field_type == 'DynamicFloat':
-            return self.parse_dynamic_float(reader)
+            if self._beta:
+                return self.parse_dynamic_float(reader)
+            else:
+                return self.parse_dynamic_float_rel(reader)
         elif field_type == 'DynamicValue':
             return self.parse_dynamic_value(reader)
         elif field_type == 'FMIOFJDICOO':  # TODO: DynamicValues in AbilityConfig
