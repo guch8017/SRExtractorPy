@@ -8,7 +8,6 @@ log = get_logger('ClassLoader')
 BLACK_LIST = {
     'TaskConfig': [
         'LevelShowDialog',
-        'OCDJOKABOEP'
     ]
 }
 
