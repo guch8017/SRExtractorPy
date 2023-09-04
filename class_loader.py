@@ -67,6 +67,7 @@ class ClassLoader:
         self._rev_base_class: Dict[str, List[str]] = {}
         self._excel_row_class: List[str] = []
         self._cur_namespace = ''
+        self._dyn_value_decl = ''
         with open(header_file, 'r', encoding='utf-8') as f:
             self.header_raw = f.readlines()
         if index_file is not None:
@@ -78,6 +79,7 @@ class ClassLoader:
         self._len = len(self.header_raw)
         self.parse()
         self._guess_derivation_idx()
+        self._find_dyn_value()
 
     def parse(self):
         while self._idx < self._len:
@@ -128,6 +130,16 @@ class ClassLoader:
                 field.sort()
                 self._cls_index[item] = {str(idx + 1): it for idx, it in enumerate(field)}
                 self._cls_index[item]['0'] = item
+
+    def _find_dyn_value(self):
+        cls = self.get_class('AbilityConfig')
+        for field in cls:
+            if field.name == 'DynamicValues':
+                self._dyn_value_decl = field.type
+
+    @property
+    def dyn_value_decl(self):
+        return self._dyn_value_decl
 
     def get_class(self, name: str, with_base_class: bool = False) -> List[FieldDecl]:
         ret = self._classes.get(name, None)

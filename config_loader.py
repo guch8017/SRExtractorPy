@@ -459,7 +459,12 @@ class ConfigLoader:
                 return self.parse_dynamic_float_rel(reader)
         elif field_type == 'DynamicValue':
             return self.parse_dynamic_value(reader)
-        elif field_type == 'FMIOFJDICOO':  # TODO: DynamicValues in AbilityConfig
+        # TODO: DynamicValues in AbilityConfig
+        #   Version 1.1.00: EILFONIHBCB
+        #   Version 1.1.5x-1.2.00: FMIOFJDICOO
+        #   Version 1.2.5x-1.3.00: JNKGHEGHNAC
+        #   Version 1.3.5x-1.4.00: DEHIOFECJDK
+        elif field_type == self._class.dyn_value_decl:
             return self.parse_dynamic_values(reader)
         elif field_type == 'TextID' or field_type == 'StringHash':
             return {"Hash": reader.read_hash()}
